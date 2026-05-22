@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ujian Online: Komputer & Masyarakat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .hidden { display: none; }
+        .card { background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); padding: 2rem; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="app" class="w-full max-w-2xl">
+        
+        <!-- Login Screen -->
+        <div id="login-screen" class="card">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Ujian Online: Komputer & Masyarakat</h1>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                    <input type="text" id="name" class="w-full p-2 border border-gray-300 rounded-lg mt-1" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">NIM</label>
+                    <input type="text" id="nim" class="w-full p-2 border border-gray-300 rounded-lg mt-1" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Kelas</label>
+                    <input type="text" id="class" class="w-full p-2 border border-gray-300 rounded-lg mt-1" required>
+                </div>
+                <button onclick="startExam()" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition">Mulai Ujian</button>
+            </div>
+        </div>
+
+        <!-- Exam Screen -->
+        <div id="exam-screen" class="card hidden">
+            <div class="flex justify-between items-center mb-6">
+                <div id="progress" class="text-sm font-bold text-indigo-600">Soal 1 / 50</div>
+                <div id="user-info" class="text-xs text-gray-500"></div>
+            </div>
+            <div id="question-container" class="mb-6">
+                <h2 id="question-text" class="text-lg font-medium text-gray-800">Loading question...</h2>
+                <div id="options-container" class="mt-4 space-y-2"></div>
+            </div>
+            <div class="flex justify-between mt-6">
+                <button id="prev-btn" onclick="prevQuestion()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Sebelumnya</button>
+                <button id="next-btn" onclick="nextQuestion()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Selanjutnya</button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="card hidden text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Hasil Ujian</h2>
+            <p id="score-text" class="text-5xl font-extrabold text-indigo-600 mb-4"></p>
+            <p id="feedback-text" class="text-gray-600 mb-6"></p>
+            <button onclick="location.reload()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg">Ulangi Ujian</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { q: "Apa yang dimaksud dengan Etika Komputer?", o: ["Aturan hukum negara", "Prinsip moral penggunaan teknologi", "Teknik membuat virus", "Cara memperbaiki hardware"], a: 1 },
+            { q: "Apa dampak positif utama komputer bagi masyarakat?", o: ["Peningkatan kriminalitas", "Kemudahan akses informasi", "Ketergantungan gadget", "Peningkatan polusi"], a: 1 },
+            { q: "Fenomena di mana masyarakat kurang memiliki akses teknologi disebut...", o: ["Digital Divide", "Cyber Crime", "Artificial Intelligence", "E-Commerce"], a: 0 },
+            { q: "Apa yang dimaksud dengan Cyber Crime?", o: ["Kejahatan di dunia nyata", "Kejahatan berbasis teknologi komputer", "Aktivitas belanja online", "Pembuatan software"], a: 1 },
+            { q: "Salah satu contoh bentuk Cyber Crime adalah...", o: ["Phishing", "Menulis artikel", "Membeli pulsa", "Belajar coding"], a: 0 },
+            { q: "Hak Kekayaan Intelektual (HAKI) di dunia digital bertujuan untuk...", o: ["Menghapus karya orang lain", "Melindungi karya cipta", "Mempermudah pembajakan", "Menggandakan software"], a: 1 },
+            { q: "Apa yang dimaksud dengan Netiket?", o: ["Etika dalam berinternet", "Nama sebuah perangkat", "Jenis jaringan kabel", "Cara hacking"], a: 0 },
+            { q: "Manfaat utama E-Commerce bagi masyarakat adalah...", o: ["Meningkatkan antrian", "Kemudahan bertransaksi jarak jauh", "Menghapus pasar tradisional", "Menciptakan monopoli"], a: 1 },
+            { q: "Apa itu AI (Artificial Intelligence)?", o: ["Komputer rusak", "Kecerdasan buatan", "Alat cetak", "Virus komputer"], a: 1 },
+            { q: "Apa dampak buruk sosial media yang berlebihan?", o: ["Menambah teman", "Mengurangi interaksi langsung", "Mempercepat berita", "Menambah wawasan"], a: 1 },
+            { q: "Apa yang dimaksud dengan privasi data?", o: ["Menyebarkan data", "Melindungi informasi pribadi", "Menjual data", "Mencuri data"], a: 1 },
+            { q: "Tindakan mencuri identitas orang lain disebut...", o: ["Identity Theft", "Phishing", "Hacking", "Defacing"], a: 0 },
+            { q: "Apa itu Cyberbullying?", o: ["Perundungan di dunia maya", "Belajar online", "Berita hoax", "Promosi produk"], a: 0 },
+            { q: "Apa yang dimaksud dengan open source?", o: ["Software tertutup", "Software berbayar", "Software yang kodenya terbuka", "Software rusak"], a: 2 },
+            { q: "Apa dampak otomatisasi terhadap lapangan kerja?", o: ["Semua pekerjaan hilang", "Pergeseran jenis pekerjaan", "Tidak ada dampak", "Pekerjaan bertambah tanpa batas"], a: 1 },
+            { q: "Apa fungsi utama firewall?", o: ["Mempercepat internet", "Keamanan jaringan", "Mendesain gambar", "Mengetik dokumen"], a: 1 },
+            { q: "Istilah untuk berita bohong di internet adalah...", o: ["Hoax", "Blog", "Vlog", "Podcast"], a: 0 },
+            { q: "Apa itu Cloud Computing?", o: ["Komputasi di awan nyata", "Penyimpanan/komputasi berbasis internet", "Hardware komputer", "Kerusakan server"], a: 1 },
+            { q: "Tujuan utama enkripsi data adalah...", o: ["Memperbesar file", "Menjaga keamanan data", "Menghapus data", "Membuat data berat"], a: 1 },
+            { q: "Apa peran komputer dalam dunia pendidikan?", o: ["Menggantikan guru sepenuhnya", "Alat bantu pembelajaran", "Membuat siswa malas", "Menghilangkan buku"], a: 1 },
+            { q: "Apa yang dimaksud dengan malware?", o: ["Perangkat lunak berbahaya", "Perangkat keras", "Internet sehat", "Game online"], a: 0 },
+            { q: "Tindakan menyebarkan virus sengaja disebut...", o: ["Hacking", "Cracking", "Defacing", "Coding"], a: 1 },
+            { q: "Apa dampak komputer terhadap lingkungan?", o: ["E-waste (limbah elektronik)", "Meningkatkan udara bersih", "Mengurangi panas bumi", "Tidak ada dampak"], a: 0 },
+            { q: "Apa itu IoT (Internet of Things)?", o: ["Internet yang rusak", "Konektivitas benda ke internet", "Jenis virus", "Software komputer"], a: 1 },
+            { q: "Mengapa password harus kuat?", o: ["Agar mudah diingat", "Agar tidak mudah ditebak/bobol", "Agar komputer cepat", "Agar virus tidak masuk"], a: 1 },
+            { q: "Apa itu E-Government?", o: ["Pemerintahan berbasis teknologi", "Pemerintahan desa", "Pemerintahan militer", "Perusahaan swasta"], a: 0 },
+            { q: "Apa arti dari 'Digital Native'?", o: ["Orang lahir di era digital", "Orang gaptek", "Pembuat komputer", "Penjual gadget"], a: 0 },
+            { q: "Apa manfaat Telemedicine?", o: ["Layanan medis jarak jauh", "Operasi tanpa dokter", "Penjualan obat ilegal", "Membangun rumah sakit"], a: 0 },
+            { q: "Apa yang dilakukan oleh seorang Hacker etis (White Hat)?", o: ["Mencuri data", "Menemukan celah keamanan untuk perbaikan", "Membuat virus", "Menjual data"], a: 1 },
+            { q: "Apa itu Data Mining?", o: ["Menambang emas", "Analisis data besar", "Menghapus database", "Membuat hardware"], a: 1 },
+            { q: "Dampak komputer pada administrasi perkantoran adalah...", o: ["Semakin lambat", "Semakin efisien", "Menambah kertas", "Menambah staf"], a: 1 },
+            { q: "Apa itu VPN?", o: ["Virtual Private Network", "Very Public Network", "Virus Protection Network", "Valid Path Node"], a: 0 },
+            { q: "Mengapa perlindungan hak cipta penting di era digital?", o: ["Membatasi kreativitas", "Menghargai hasil karya", "Memperbanyak pembajakan", "Mengurangi royalti"], a: 1 },
+            { q: "Apa yang dimaksud dengan Software Piracy?", o: ["Pembajakan perangkat lunak", "Pembuatan software", "Menjual software legal", "Menghapus software"], a: 0 },
+            { q: "Apa dampak positif komputer dalam kesehatan?", o: ["Diagnosis yang lebih akurat", "Menggantikan peran dokter", "Menambah sakit", "Mahal"], a: 0 },
+            { q: "Apa itu Spam?", o: ["Email tidak diinginkan", "Jenis virus", "Hardware", "Software"], a: 0 },
+            { q: "Peran komputer dalam sistem transportasi adalah...", o: ["Mengatur lampu lalu lintas", "Membuat macet", "Menambah jumlah mobil", "Tidak ada peran"], a: 0 },
+            { q: "Apa itu Smart City?", o: ["Kota yang menggunakan teknologi", "Kota tanpa teknologi", "Kota yang kumuh", "Desa tradisional"], a: 0 },
+            { q: "Apa dampak negatif internet terhadap anak-anak?", o: ["Konten tidak layak", "Menambah teman", "Mencerdaskan", "Meningkatkan kemampuan"], a: 0 },
+            { q: "Apa yang dilakukan sistem operasi?", o: ["Mengelola hardware/software", "Mengetik", "Menghitung saja", "Mencetak"], a: 0 },
+            { q: "Apa itu 'Big Data'?", o: ["Data berukuran sangat besar", "Data kecil", "Virus", "Hardware"], a: 0 },
+            { q: "Manfaat digitalisasi arsip adalah...", o: ["Mempercepat pencarian", "Memakan tempat", "Mudah rusak", "Biaya mahal"], a: 0 },
+            { q: "Apa yang dimaksud dengan 'Open Source Initiative'?", o: ["Mempromosikan software bebas", "Menjual software", "Menutup akses kode", "Membuat virus"], a: 0 },
+            { q: "Bagaimana cara menghindari pencurian identitas?", o: ["Jangan sembarang berbagi data", "Selalu bagikan password", "Gunakan satu password", "Jangan gunakan internet"], a: 0 },
+            { q: "Apa dampak penggunaan komputer pada pola makan?", o: ["Tidak ada", "Pesan makanan online", "Tidak berpengaruh", "Memasak lebih lama"], a: 1 },
+            { q: "Apa yang dimaksud dengan 'Cyberwarfare'?", o: ["Perang di dunia maya", "Perang fisik", "Olahraga", "Game"], a: 0 },
+            { q: "Apa itu 'Machine Learning'?", o: ["Mesin belajar dari data", "Mesin rusak", "Mesin cuci", "Mesin hitung"], a: 0 },
+            { q: "Dampak komputer dalam bidang hiburan adalah...", o: ["Streaming film", "Menghapus film", "Menambah antrian", "Membuat mahal"], a: 0 },
+            { q: "Mengapa kita harus waspada terhadap link mencurigakan?", o: ["Takut terkena phishing", "Karena tidak ada gunanya", "Agar internet cepat", "Karena link itu indah"], a: 0 },
+            { q: "Kesimpulan terbaik tentang komputer dan masyarakat adalah...", o: ["Komputer alat netral", "Komputer selalu jahat", "Komputer harus dilarang", "Komputer selalu baik"], a: 0 }
+        ];
+
+        let state = {
+            currentUser: null,
+            answers: {}, // index: optionIndex
+            currentQ: 0
+        };
+
+        function startExam() {
+            const name = document.getElementById('name').value;
+            const nim = document.getElementById('nim').value;
+            const cls = document.getElementById('class').value;
+
+            if(!name || !nim || !cls) { alert('Mohon isi semua data!'); return; }
+            
+            state.currentUser = { name, nim, cls };
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('exam-screen').classList.remove('hidden');
+            document.getElementById('user-info').innerText = `${name} - ${nim} - ${cls}`;
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[state.currentQ];
+            document.getElementById('progress').innerText = `Soal ${state.currentQ + 1} / 50`;
+            document.getElementById('question-text').innerText = `${state.currentQ + 1}. ${q.q}`;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.o.forEach((opt, idx) => {
+                const isSelected = state.answers[state.currentQ] === idx;
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left p-3 rounded-lg border ${isSelected ? 'bg-indigo-100 border-indigo-500' : 'border-gray-300 hover:bg-gray-50'}`;
+                btn.innerText = opt;
+                btn.onclick = () => selectAnswer(idx);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(idx) {
+            state.answers[state.currentQ] = idx;
+            renderQuestion();
+        }
+
+        function nextQuestion() {
+            if(state.currentQ < 49) {
+                state.currentQ++;
+                renderQuestion();
+            } else {
+                finishExam();
+            }
+        }
+
+        function prevQuestion() {
+            if(state.currentQ > 0) {
+                state.currentQ--;
+                renderQuestion();
+            }
+        }
+
+        function finishExam() {
+            let score = 0;
+            questions.forEach((q, idx) => {
+                if(state.answers[idx] === q.a) score += 2; // 50 soal * 2 = 100
+            });
+            
+            document.getElementById('exam-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('score-text').innerText = score;
+            document.getElementById('feedback-text').innerText = score >= 70 ? "Luar Biasa!" : "Belajar lagi ya!";
+        }
+    </script>
+</body>
+</html>
